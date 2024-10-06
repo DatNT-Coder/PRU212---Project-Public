@@ -6,14 +6,14 @@ using UnityEngine;
 
 public class Health : NetworkBehaviour {
     [field: SerializeField] public int MaxHealth { get; private set; } = 100;
-    public NetworkVariable<int> CurrentPlayerhealth = new NetworkVariable<int>();
+    public NetworkVariable<int> CurrentPlayerHealth = new NetworkVariable<int>();
     private bool isDead;
 
     public Action<Health> OnDie;
 
     public override void OnNetworkSpawn() {
         if(!IsServer) return;
-        CurrentPlayerhealth.Value = MaxHealth;
+        CurrentPlayerHealth.Value = MaxHealth;
     }
 
     public void TakeDamage(int damageValue) {
@@ -27,10 +27,10 @@ public class Health : NetworkBehaviour {
     private void ModifyHealth(int healthValue) {
         if(isDead) return;
 
-        int newHealth = CurrentPlayerhealth.Value + healthValue;
-        CurrentPlayerhealth.Value = Mathf.Clamp(newHealth, 0, MaxHealth);
+        int newHealth = CurrentPlayerHealth.Value + healthValue;
+        CurrentPlayerHealth.Value = Mathf.Clamp(newHealth, 0, MaxHealth);
 
-        if (CurrentPlayerhealth.Value == 0) {
+        if (CurrentPlayerHealth.Value == 0) {
             OnDie?.Invoke(this);
             isDead = true;
         }
