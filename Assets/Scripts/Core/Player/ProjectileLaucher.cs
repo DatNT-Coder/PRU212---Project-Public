@@ -6,117 +6,131 @@ using UnityEngine;
 
 public class ProjectileLauncher : NetworkBehaviour
 {
-    [Header("References")]
-    [SerializeField] private InputReader inputReader;
-    [SerializeField] private Transform projectileSpawnPoint;
-    [SerializeField] private GameObject serverProjectilePrefab;
-    [SerializeField] private GameObject clientProjectilePrefab;
-    [SerializeField] private GameObject muzzleFlash;
-    [SerializeField] private Collider2D playerCollider;
+	[Header("References")]
+	[SerializeField] private InputReader inputReader;
+	[SerializeField] private CoinWallet wallet;
+	[SerializeField] private Transform projectileSpawnPoint;
+	[SerializeField] private GameObject serverProjectilePrefab;
+	[SerializeField] private GameObject clientProjectilePrefab;
+	[SerializeField] private GameObject muzzleFlash;
+	[SerializeField] private Collider2D playerCollider;
 
-    [Header("Settings")]
-    [SerializeField] private float projectileSpeed;
-    [SerializeField] private float fireRate;
-    [SerializeField] private float muzzleFlashDuration;
+	[Header("Settings")]
+	[SerializeField] private float projectileSpeed;
+	[SerializeField] private float fireRate;
+	[SerializeField] private float muzzleFlashDuration;
+	[SerializeField] private int costToFire;
 
-    private bool shouldFire;
-    private float previousFireTime;
-    private float muzzleFlashTimer;
+	private bool shouldFire;
+	private float timer;
+	private float muzzleFlashTimer;
 
-    public override void OnNetworkSpawn()
-    {
-        if (!IsOwner) { return; }
+	public override void OnNetworkSpawn()
+	{
+		if (!IsOwner) { return; }
 
-        inputReader.PrimaryFireEvent += HandlePrimaryFire;
-    }
+		inputReader.PrimaryFireEvent += HandlePrimaryFire;
+	}
 
-    public override void OnNetworkDespawn()
-    {
-        if (!IsOwner) { return; }
+	public override void OnNetworkDespawn()
+	{
+		if (!IsOwner) { return; }
 
-        inputReader.PrimaryFireEvent -= HandlePrimaryFire;
-    }
+		inputReader.PrimaryFireEvent -= HandlePrimaryFire;
+	}
 
-    private void Update()
-    {
-        if (muzzleFlashTimer > 0f)
-        {
-            muzzleFlashTimer -= Time.deltaTime;
+	private void Update()
+	{
+		if (muzzleFlashTimer > 0f)
+		{
+			muzzleFlashTimer -= Time.deltaTime;
 
-            if (muzzleFlashTimer <= 0f)
-            {
-                muzzleFlash.SetActive(false);
-            }
-        }
+			if (muzzleFlashTimer <= 0f)
+			{
+				muzzleFlash.SetActive(false);
+			}
+		}
 
-        if (!IsOwner) { return; }
+		if (!IsOwner) { return; }
 
-        if (!shouldFire) { return; }
+		if (timer > 0)
+		{
+			timer -= Time.deltaTime;
+		}
 
-        if (Time.time < (1 / fireRate) + previousFireTime) { return; }
+		if (!shouldFire) { return; }
 
-        PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
+		if (timer > 0) { return; }
 
-        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
+		if (wallet.TotalCoins.Value < 0) { return; }
 
-        previousFireTime = Time.time;
-    }
+		PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
+
+		SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
+
+		timer = 1 / fireRate;
+	}
 
 
-    private void HandlePrimaryFire(bool shouldFire)
-    {
-        this.shouldFire = shouldFire;
-    }
+	private void HandlePrimaryFire(bool shouldFire)
+	{
+		this.shouldFire = shouldFire;
+	}
 
-    [ServerRpc]
-    private void PrimaryFireServerRpc(Vector3 spawnPos, Vector3 direction)
-    {
-        GameObject projectileInstance = Instantiate(
-            serverProjectilePrefab,
-            spawnPos,
-            Quaternion.identity);
+	[ServerRpc]
+	private void PrimaryFireServerRpc(Vector3 spawnPos, Vector3 direction)
+	{
+		if (wallet.TotalCoins.Value < 0) { return; }
 
-        projectileInstance.transform.up = direction;
+		wallet.SpendCoins(costToFire);
 
-        Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
+		GameObject projectileInstance = Instantiate(
+			serverProjectilePrefab,
+			spawnPos,
+			Quaternion.identity);
 
-        if (projectileInstance.TryGetComponent<DealDamageOnContact>(out DealDamageOnContact dealDamage)) {
-            dealDamage.SetOwner(OwnerClientId);
-        }
+		projectileInstance.transform.up = direction;
 
-        if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
-        {
-            rb.velocity = rb.transform.up * projectileSpeed;
-        }
+		Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
 
-        SpawnDummyProjectileClientRpc(spawnPos, direction);
-    }
+		if (projectileInstance.TryGetComponent<DealDamageOnContact>(out DealDamageOnContact dealDamage))
+		{
+			dealDamage.SetOwner(OwnerClientId);
+		}
 
-    [ClientRpc]
-    private void SpawnDummyProjectileClientRpc(Vector3 spawnPos, Vector3 direction)
-    {
-        if (IsOwner) { return; }
+		if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
+		{
+			rb.velocity = rb.transform.up * projectileSpeed;
+		}
 
-        SpawnDummyProjectile(spawnPos, direction);
-    }
+		SpawnDummyProjectileClientRpc(spawnPos, direction);
+	}
 
-    private void SpawnDummyProjectile(Vector3 spawnPos, Vector3 direction)
-    {
-        muzzleFlash.SetActive(true);
-        muzzleFlashTimer = muzzleFlashDuration;
+	[ClientRpc]
+	private void SpawnDummyProjectileClientRpc(Vector3 spawnPos, Vector3 direction)
+	{
+		if (IsOwner) { return; }
 
-        GameObject projectileInstance = Instantiate(
-            clientProjectilePrefab,
-            spawnPos,
-            Quaternion.identity);
+		SpawnDummyProjectile(spawnPos, direction);
+	}
 
-        projectileInstance.transform.up = direction;
+	private void SpawnDummyProjectile(Vector3 spawnPos, Vector3 direction)
+	{
+		muzzleFlash.SetActive(true);
+		muzzleFlashTimer = muzzleFlashDuration;
 
-        Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
+		GameObject projectileInstance = Instantiate(
+			clientProjectilePrefab,
+			spawnPos,
+			Quaternion.identity);
 
-        if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
-        {
-            rb.velocity = rb.transform.up * projectileSpeed;
-        }
-    }
+		projectileInstance.transform.up = direction;
+
+		Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
+
+		if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
+		{
+			rb.velocity = rb.transform.up * projectileSpeed;
+		}
+	}
 }
