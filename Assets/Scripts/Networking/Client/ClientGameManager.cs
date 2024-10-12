@@ -1,30 +1,58 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Core;
+using Unity.Services.Relay.Models;
+using Unity.Services.Relay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class ClientGameManager
 {
-	private const string MenuSceneName = "Menu";
+    private JoinAllocation allocation;
 
-	public async Task<bool> InitAsync()
-	{
-		await UnityServices.InitializeAsync();
+    private const string MenuSceneName = "Menu";
 
-		AuthState authState = await AuthenticationWrapper.DoAuth();
+    public async Task<bool> InitAsync()
+    {
+        await UnityServices.InitializeAsync();
 
-		if (authState == AuthState.Authenticated)
-		{
-			return true;
-		}
+        AuthState authState = await AuthenticationWrapper.DoAuth();
 
-		return false;
-	}
+        if (authState == AuthState.Authenticated)
+        {
+            return true;
+        }
 
-	public void GoToMenu()
-	{
-		SceneManager.LoadScene(MenuSceneName);
-	}
+        return false;
+    }
+    public void GoToMenu()
+    {
+        SceneManager.LoadScene(MenuSceneName);
+    }
+
+    public async Task StartClientAsync(string joinCode)
+    {
+        try
+        {
+            allocation = await Relay.Instance.JoinAllocationAsync(joinCode);
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            return;
+        }
+
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+
+        RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
+        transport.SetRelayServerData(relayServerData);
+
+        NetworkManager.Singleton.StartClient();
+    }
+
 }
