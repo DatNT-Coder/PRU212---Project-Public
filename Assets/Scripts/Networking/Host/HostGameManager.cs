@@ -21,25 +21,30 @@ public class HostGameManager : IDisposable
     private string joinCode;
     private string lobbyId;
 
-    private NetworkServer networkServer;
+    public NetworkServer NetworkServer { get; private set; }
 
     private const int MaxConnections = 20;
     private const string GameSceneName = "Game";
 
-    public async Task StartHostAsync() {
-        try {
+    public async Task StartHostAsync()
+    {
+        try
+        {
             allocation = await Relay.Instance.CreateAllocationAsync(MaxConnections);
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Debug.Log(e);
             return;
         }
 
-        try {
+        try
+        {
             joinCode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log(joinCode);
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Debug.Log(e);
             return;
         }
@@ -49,7 +54,8 @@ public class HostGameManager : IDisposable
         RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
         transport.SetRelayServerData(relayServerData);
 
-        try {
+        try
+        {
             CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
             lobbyOptions.IsPrivate = false;
             lobbyOptions.Data = new Dictionary<string, DataObject>()
@@ -63,19 +69,20 @@ public class HostGameManager : IDisposable
             };
             string playerName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Unknown");
             Lobby lobby = await Lobbies.Instance.CreateLobbyAsync(
-                $"{ playerName}'s Lobby", MaxConnections, lobbyOptions);
+                $"{playerName}'s Lobby", MaxConnections, lobbyOptions);
 
             lobbyId = lobby.Id;
 
             HostSingleton.Instance.StartCoroutine(HearbeatLobby(15));
         }
-        catch (LobbyServiceException e) {
+        catch (LobbyServiceException e)
+        {
             Debug.Log(e);
             return;
         }
 
 
-        networkServer = new NetworkServer(NetworkManager.Singleton);
+        NetworkServer = new NetworkServer(NetworkManager.Singleton);
 
         UserData userData = new UserData
         {
@@ -92,9 +99,11 @@ public class HostGameManager : IDisposable
         NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
     }
 
-    private IEnumerator HearbeatLobby(float waitTimeSeconds) {
+    private IEnumerator HearbeatLobby(float waitTimeSeconds)
+    {
         WaitForSecondsRealtime delay = new WaitForSecondsRealtime(waitTimeSeconds);
-        while (true) {
+        while (true)
+        {
             Lobbies.Instance.SendHeartbeatPingAsync(lobbyId);
             yield return delay;
         }
@@ -118,7 +127,7 @@ public class HostGameManager : IDisposable
             lobbyId = string.Empty;
         }
 
-        networkServer?.Dispose();
+        NetworkServer?.Dispose();
 
     }
 }
