@@ -17,7 +17,6 @@ GameObject:
   - component: {fileID: 3293024887091321422}
   - component: {fileID: 8575422337800158189}
   - component: {fileID: -2853793560704086009}
-  - component: {fileID: -1835437137034256775}
   - component: {fileID: 2086047175616584651}
   m_Layer: 0
   m_Name: Player
@@ -195,20 +194,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6cf393882778cc44844fae1cbdb477b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TotalCoins:
-    m_InternalValue: 0
---- !u!114 &-1835437137034256775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 549549328071939766}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6cf393882778cc44844fae1cbdb477b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  health: {fileID: 8575422337800158189}
+  coinPrefab: {fileID: 8682502622676331407, guid: b4b0603cc96b8404e9f5abf3acd5ed8c, type: 3}
+  coinSpread: 3
+  bountyPercentage: 50
+  bountyCoinCount: 10
+  minBountyCoinValue: 5
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 1
   TotalCoins:
     m_InternalValue: 0
 --- !u!114 &2086047175616584651
