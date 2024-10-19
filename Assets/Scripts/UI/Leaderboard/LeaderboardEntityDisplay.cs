@@ -8,7 +8,7 @@ using UnityEngine;
 public class LeaderboardEntityDisplay : MonoBehaviour
 {
 	[SerializeField] TMP_Text displayText;
-	[SerializeField] private Color myClour;
+	[SerializeField] private Color myColour;
 
 	private FixedString32Bytes playerName;
 	public ulong ClientId { get; private set; }
@@ -21,7 +21,7 @@ public class LeaderboardEntityDisplay : MonoBehaviour
 
 		if (clientId == NetworkManager.Singleton.LocalClientId)
 		{
-			displayText.color = myClour;
+			displayText.color = myColour;
 		}
 
 		UpdateCoins(coins);
