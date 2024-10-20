@@ -680,11 +680,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 7aa42591-4eff-4564-a2cf-c279258ca179
+  cloudProjectId: a62237b1-a2f9-4ee6-8dca-4447da6d7076
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Tank Multiplayer
-  organizationId: daotanphat2143
+  projectName: Tank Multiplayer (1)
+  organizationId: huuhoang03
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
