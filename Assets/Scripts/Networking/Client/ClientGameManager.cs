@@ -56,7 +56,7 @@ public class ClientGameManager :IDisposable
         RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
         transport.SetRelayServerData(relayServerData);
 
-        UserData userData = new UserData
+        GameData userData = new GameData
         {
             userName = PlayerPrefs.GetString(NameSelector.PlayerNameKey, "Missing Name"),
             userAuthId = AuthenticationService.Instance.PlayerId
@@ -68,9 +68,15 @@ public class ClientGameManager :IDisposable
 
         NetworkManager.Singleton.StartClient();
     }
+    public void Disconnect()
+    {
+        networkClient.Disconnect();
+    }
 
     public void Dispose()
     {
         networkClient?.Dispose();
     }
+
+   
 }
