@@ -11,6 +11,7 @@ public class TankPlayer : NetworkBehaviour
     [Header("References")]
     [SerializeField] private CinemachineVirtualCamera virtualCamera;
     [SerializeField] private SpriteRenderer minimapIconRenderer;
+    [SerializeField] private Texture2D crosshair;
     [field: SerializeField] public Health Health { get; private set; }
 	[field: SerializeField] public CoinWallet Wallet { get; private set; }
 
@@ -37,7 +38,10 @@ public class TankPlayer : NetworkBehaviour
         if (IsOwner)
         {
             virtualCamera.Priority = ownerPriority;
+
             minimapIconRenderer.color = ownerColour;
+
+            Cursor.SetCursor(crosshair, new Vector2(crosshair.width / 2, crosshair.height / 2), CursorMode.Auto);
         }
     }
 
