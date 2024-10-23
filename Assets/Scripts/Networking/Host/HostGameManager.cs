@@ -118,10 +118,10 @@ public class HostGameManager : IDisposable
 
     public async void Shutdown()
     {
-        HostSingleton.Instance.StopCoroutine(nameof(HearbeatLobby));
+        if (string.IsNullOrEmpty(lobbyId)) { return; }
+        
+            HostSingleton.Instance.StopCoroutine(nameof(HearbeatLobby));
 
-        if (!string.IsNullOrEmpty(lobbyId))
-        {
             try
             {
                 await Lobbies.Instance.DeleteLobbyAsync(lobbyId);
@@ -132,10 +132,10 @@ public class HostGameManager : IDisposable
             }
 
             lobbyId = string.Empty;
-        }
-        NetworkServer.OnClientLeft -= HandleClientLeft;
+        
+            NetworkServer.OnClientLeft -= HandleClientLeft;
 
-        NetworkServer?.Dispose();
+            NetworkServer?.Dispose();
     }
 
     private async void HandleClientLeft(string authId)
