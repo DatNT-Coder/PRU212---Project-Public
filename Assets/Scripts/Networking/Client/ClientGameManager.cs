@@ -108,7 +108,7 @@ public class ClientGameManager :IDisposable
 
         return matchmakingResult.result;
     }
-    public async Task CancelMatchMaking()
+    public async Task CancelMatchmaking()
     {
         await matchmaker.CancelMatchmaking();
     }
