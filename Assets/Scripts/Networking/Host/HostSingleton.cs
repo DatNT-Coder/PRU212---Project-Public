@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Netcode;
 using UnityEngine;
 
 public class HostSingleton : MonoBehaviour
@@ -17,7 +18,6 @@ public class HostSingleton : MonoBehaviour
 
             if (instance == null)
             {
-                Debug.LogError("No HostSingleton in the scene!");
                 return null;
             }
             return instance;
@@ -29,9 +29,9 @@ public class HostSingleton : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void CreateHost()
+    public void CreateHost(NetworkObject playerPrefab)
     {
-        GameManager = new HostGameManager();
+        GameManager = new HostGameManager(playerPrefab);
     }
 
     private void OnDestroy()
