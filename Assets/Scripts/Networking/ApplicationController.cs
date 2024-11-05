@@ -7,60 +7,70 @@ using UnityEngine.SceneManagement;
 
 public class ApplicationController : MonoBehaviour
 {
-    [SerializeField] private ClientSingleton clientPrefab;
-    [SerializeField] private HostSingleton hostPrefab;
-    [SerializeField] private ServerSingleton serverPrefab;
-    [SerializeField] private NetworkObject playerPrefab;
-    private ApplicationData appData;
-    private const string GameSceneName = "Game";
-    private async void Start()
-    {
-        DontDestroyOnLoad(gameObject);
+	[SerializeField] private ClientSingleton clientPrefab;
+	[SerializeField] private HostSingleton hostPrefab;
+	[SerializeField] private ServerSingleton serverPrefab;
+	NetworkObject playerPrefab;
+	[SerializeField] private List<NetworkObject> playerPrefabs;
+	private NetworkVariable<int> playerCharacterIndex = new NetworkVariable<int>();
+	private ApplicationData appData;
+	private const string GameSceneName = "Game";
+	private async void Start()
+	{
+		DontDestroyOnLoad(gameObject);
 
-        await LaunchInMode(SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null);
-    }
+		// Retrieve selected character index from PlayerPrefs
+		int selectedCharacter = PlayerPrefs.GetInt("selectedCharacter");
+		playerCharacterIndex.Value = selectedCharacter;
 
-    private async Task LaunchInMode(bool isDedicatedServer)
-    {
-        if (isDedicatedServer)
-        {
-            Application.targetFrameRate = 60;
-            appData = new ApplicationData();
+		await LaunchInMode(SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null);
+	}
 
-            ServerSingleton serverSingleton = Instantiate(serverPrefab);
+	private async Task LaunchInMode(bool isDedicatedServer)
+	{
+		if (isDedicatedServer)
+		{
+			Application.targetFrameRate = 60;
+			appData = new ApplicationData();
 
-            StartCoroutine(LoadGameSceneAsync(serverSingleton));
+			ServerSingleton serverSingleton = Instantiate(serverPrefab);
 
-        }
-        else
-        {
-            HostSingleton hostSingleton = Instantiate(hostPrefab);
-            hostSingleton.CreateHost(playerPrefab);
+			StartCoroutine(LoadGameSceneAsync(serverSingleton));
 
-            ClientSingleton clientSingleton = Instantiate(clientPrefab);
-            bool authenticated = await clientSingleton.CreateClient();
+		}
+		else
+		{
+			playerPrefab = playerPrefabs[playerCharacterIndex.Value];
 
-            if (authenticated)
-            {
-                clientSingleton.GameManager.GoToMenu();
-            }
-        }
-    }
+			HostSingleton hostSingleton = Instantiate(hostPrefab);
+			hostSingleton.CreateHost(playerPrefab);
 
-    private IEnumerator LoadGameSceneAsync(ServerSingleton serverSingleton)
-    {
-        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(GameSceneName);
+			ClientSingleton clientSingleton = Instantiate(clientPrefab);
+			bool authenticated = await clientSingleton.CreateClient();
 
-        while (!asyncOperation.isDone)
-        {
-            yield return null;
-        }
+			if (authenticated)
+			{
+				clientSingleton.GameManager.GoToMenu();
+			}
+		}
+	}
 
-        Task createServerTask = serverSingleton.CreateServer(playerPrefab);
-        yield return new WaitUntil(() => createServerTask.IsCompleted);
+	private IEnumerator LoadGameSceneAsync(ServerSingleton serverSingleton)
+	{
+		AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(GameSceneName);
 
-        Task startServerTask = serverSingleton.GameManager.StartGameServerAsync();
-        yield return new WaitUntil(() => startServerTask.IsCompleted);
-    }
+		while (!asyncOperation.isDone)
+		{
+			yield return null;
+		}
+
+		playerPrefab = playerPrefabs[playerCharacterIndex.Value];
+
+		Task createServerTask = serverSingleton.CreateServer(playerPrefab);
+		yield return new WaitUntil(() => createServerTask.IsCompleted);
+
+		Task startServerTask = serverSingleton.GameManager.StartGameServerAsync();
+		yield return new WaitUntil(() => startServerTask.IsCompleted);
+	}
 
 }
