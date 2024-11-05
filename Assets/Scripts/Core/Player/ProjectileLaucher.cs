@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -141,5 +141,15 @@ public class ProjectileLauncher : NetworkBehaviour
 		{
 			rb.velocity = rb.transform.up * projectileSpeed;
 		}
+	}
+	public float GetProjectileSpeed()
+	{
+		return projectileSpeed; // Trả về tốc độ hiện tại
+	}
+
+	// Thêm hàm này để thiết lập tốc độ mới cho projectile
+	public void SetProjectileSpeed(float newSpeed)
+	{
+		projectileSpeed = newSpeed; // Cập nhật tốc độ projectile
 	}
 }
